@@ -1,64 +1,49 @@
-@Library("Shared") _
 pipeline{
+    agent{label "vinod"}
+    environment{
+        SONARHOME = tool "my-sonar"
     
-    agent { label "dev"};
-    
+    }
     stages{
-        stage("Code Clone"){
+        stage("code"){
             steps{
-               script{
-                   clone("https://github.com/LondheShubham153/two-tier-flask-app.git", "master")
-               }
+                git url: "https://github.com/sandesh-kumar00/two-tier-flask-app.git/",branch:"main"
             }
         }
-        stage("Trivy File System Scan"){
+        stage("sonar-analysis"){
             steps{
-                script{
-                    trivy_fs()
+                withSonarQubeEnv("my-sonar"){
+                    sh "${env.SONARHOME}/bin/sonar-scanner -Dsonar.projectName=my-app -Dsonar.projectKey=my-app -Dsonar.sources=."
                 }
             }
         }
-        stage("Build"){
+        stage("trivy-FS-scan"){
             steps{
-                sh "docker build -t two-tier-flask-app ."
+               sh "trivy fs  --exit-code 1 --severity HIGH,CRITICAL --format table -o trivy-report.txt ."
             }
-            
         }
-        stage("Test"){
+        stage("build the code"){
             steps{
-                echo "Developer / Tester tests likh ke dega..."
+                sh "docker build -t my-app:latest ."
             }
-            
         }
-        stage("Push to Docker Hub"){
+        stage("trivy os-package scan"){
             steps{
-                script{
-                    docker_push("dockerHubCreds","two-tier-flask-app")
-                }  
+              sh "trivy image --exit-code 1 --severity HIGH,CRITICAL --format table -o trivy-image-report.txt my-app:latest"
             }
         }
-        stage("Deploy"){
+        stage("push to DockerHub"){
             steps{
-                sh "docker compose up -d --build flask-app"
+                withCredentials([usernamePassword(credentialsId: "docker-cred", usernameVariable: "DOCKER_USER", passwordVariable: "DOCKER_PASS")]){
+                 sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                 sh "docker image tag my-app:latest ${DOCKER_USER}/my-app:latest"
+                 sh "docker push  ${DOCKER_USER}/my-app:latest"
+                }
             }
         }
-    }
-
-post{
-        success{
-            script{
-                emailext from: 'mentor@trainwithshubham.com',
-                to: 'mentor@trainwithshubham.com',
-                body: 'Build success for Demo CICD App',
-                subject: 'Build success for Demo CICD App'
-            }
-        }
-        failure{
-            script{
-                emailext from: 'mentor@trainwithshubham.com',
-                to: 'mentor@trainwithshubham.com',
-                body: 'Build Failed for Demo CICD App',
-                subject: 'Build Failed for Demo CICD App'
+        stage("deploy on kind-cluster on gcp vm"){
+            steps{
+                sh "kubectl apply -f ./k8s"
             }
         }
     }
