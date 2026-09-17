@@ -65,7 +65,7 @@ jobs:
     - name: Deploy to GKE
       run: |-
 
-        kubectl apply -f ./k8s/two-tier-app-deployment.yml
+        kubectl apply -f ./k8s
         # Existing deployment ki image update karein
         kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} ${{ env.CONTAINER_NAME }}=${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         
