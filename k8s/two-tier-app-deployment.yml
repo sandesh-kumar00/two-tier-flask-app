@@ -18,8 +18,9 @@ spec:
         - name: two-tier-app
           image: trainwithshubham/flaskapp:latest
           env:
+            - name:  mysql://root:admin@mysql:3306/mydb
             - name: MYSQL_HOST
-              value: "10.98.19.211"          # this is your mysql's service clusture IP, Make sure to change it with yours
+              value: "mysql"          # this is your mysql's service clusture IP, Make sure to change it with yours
             - name: MYSQL_PASSWORD
               value: "admin"
             - name: MYSQL_USER
