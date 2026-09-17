@@ -9,7 +9,7 @@ env:
   PROJECT_ID: 'project-3d4fd68e-9492-4690-aa8'
   AR_REPO_LOCATION: 'asia-south1'
   AR_URL: asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/my-registry
-  SERVICE_ACCOUNT: wif-permissions@project-3d4fd68e-9492-4690-aa8.iam.gserviceaccount.com
+  SERVICE_ACCOUNT: cluster-gke@project-3d4fd68e-9492-4690-aa8.iam.gserviceaccount.com
   WORKLOAD_IDENTITY_PROVIDER: projects/511846968460/locations/global/workloadIdentityPools/github-pool-gke/providers/github
   
   # GKE specific variables
