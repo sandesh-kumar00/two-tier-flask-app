@@ -15,7 +15,7 @@ env:
   # GKE specific variables
   GKE_CLUSTER: 'cluster-1'       # Apne GKE cluster ka naam yahan likhein
   GKE_ZONE: 'asia-south1-a'           # Cluster ka zone ya region (e.g., us-central1-a)
-  DEPLOYMENT_NAME: './k8s/two-tier-app-deployment.yml' # Kubernetes deployment name
+  DEPLOYMENT_NAME: 'two-tier-app-deployment.yml' # Kubernetes deployment name
   CONTAINER_NAME: 'two-tier-app'           # Container name inside the deployment
 
 jobs:
@@ -64,6 +64,8 @@ jobs:
     # 5. Deploy / Update Image on GKE Cluster
     - name: Deploy to GKE
       run: |-
+
+        kubectl apply -f ./k8s/two-tier-app-deployment.yml
         # Existing deployment ki image update karein
         kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} ${{ env.CONTAINER_NAME }}=${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         
