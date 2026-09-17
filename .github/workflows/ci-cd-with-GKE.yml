@@ -14,7 +14,7 @@ env:
   
   # GKE specific variables
   GKE_CLUSTER: 'cluster-1'       # Apne GKE cluster ka naam yahan likhein
-  GKE_ZONE: 'asia-south1'           # Cluster ka zone ya region (e.g., us-central1-a)
+  GKE_ZONE: 'asia-south1-a'           # Cluster ka zone ya region (e.g., us-central1-a)
   DEPLOYMENT_NAME: 'two-tier-app' # Kubernetes deployment name
   CONTAINER_NAME: 'two-tier-app'           # Container name inside the deployment
 
