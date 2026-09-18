@@ -64,10 +64,10 @@ jobs:
     # 5. Deploy / Update Image on GKE Cluster
     - name: Deploy to GKE
       run: |-
-
+       
+       sed -i "s/IMAGE_TAG/${{ github.sha }}/g" ./k8s/two-tier-app-deployment.yaml
+     
         kubectl apply -f ./k8s
-        # Existing deployment image update 
-        kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} ${{ env.CONTAINER_NAME }}=${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         
         # Rollout status verify 
         kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }}
