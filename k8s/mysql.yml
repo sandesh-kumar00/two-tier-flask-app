@@ -1,0 +1,72 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: my-database
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - db
+              topologyKey: "kubernetes.io/hostname"
+          podAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - vivo
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: db-cont
+          image: mysql:latest
+          ports:
+            - containerPort: 3306
+          envFrom:
+            - configMapRef:
+                name: my-config
+          volumeMounts:
+            - name: db-volume
+              mountPath: /var/lib/mysql
+
+  volumeClaimTemplates:
+     - metadata:
+         name: db-volume
+       spec:
+         accessModes: [ "ReadWriteOnce" ]
+         storageClassName: standard
+         resources:
+           requests:
+              storage: 1Gi
+          
+  
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: db-svc
+
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 3306
+      targetPort: 3306
+
+

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gke-ingress
+  annotations:
+    # 🚀 Yeh annotation GKE ko batata hai ki external HTTP/S Load Balancer banana hai
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /* 
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: app-svc 
+            port:
+              number: 8080 
+

@@ -1,0 +1,64 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: app
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: vivo
+
+  template:
+    metadata:
+      labels:
+        app: vivo
+    spec:
+      containers:
+        - name: app-cont
+          image: yashsaini252/vivo-app:latest
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - secretRef:
+                name: my-secrets
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+        
+        - name: sidecar-proxy-container
+          image: alpine/socat
+          args:
+            - tcp-listen:8080,fork,reuseaddr
+            - tcp-connect:127.0.0.1:5000
+          ports:
+            - containerPort: 8080
+
+      affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - vivo
+              topologyKey: "kubernetes.io/hostname"
+          
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-svc
+
+spec:
+  selector:
+    app: vivo
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: NodePort
