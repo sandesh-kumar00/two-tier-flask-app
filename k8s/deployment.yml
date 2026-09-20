@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: app-cont
-          image: yashsaini252/vivo-app:latest
+          image: IMAGE
           ports:
             - containerPort: 5000
           envFrom:
