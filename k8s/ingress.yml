@@ -3,7 +3,6 @@ kind: Ingress
 metadata:
   name: gke-ingress
   annotations:
-    # 🚀 Yeh annotation GKE ko batata hai ki external HTTP/S Load Balancer banana hai
     kubernetes.io/ingress.class: "gce"
 spec:
   rules:
