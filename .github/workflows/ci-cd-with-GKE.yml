@@ -51,8 +51,11 @@ jobs:
     # 3. Build & Push Image to Artifact Registry
     - name: Build and Push Container
       run: |-
-        docker build -t "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" ./
-        docker push "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        docker build \
+          -t "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:latest" \
+          -t "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" ./ 
+        docker push "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" 
+        docker push "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:latest"
 
     # 4. Get GKE Credentials (kubectl setup)
     - name: Set up GKE credentials
