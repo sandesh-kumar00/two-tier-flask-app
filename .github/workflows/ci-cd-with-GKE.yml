@@ -25,6 +25,15 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v4
 
+      - name: sonarqube scan
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: squ_06458f17b2557bc5723c03d2064c018e87c0e845
+          SONAR_HOST_URL: http://34.123.118.124:9000/admin/users
+        with:
+        args: >
+          -Dsonar.qualitygate.wait=true
+
       - name: Authentication to GCP
         uses: google-github-actions/auth@v2
         with:
@@ -42,6 +51,16 @@ jobs:
         run: |
           docker build \
             -t asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/image-collector/app:${{ github.sha }} ./
+
+      - name: Trivy Image Scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: asia-south1-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${GITHUB_SHA}
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
 
       - name: pushing image to Artifact
         run: |
