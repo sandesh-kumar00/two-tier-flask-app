@@ -1,131 +1,181 @@
- 
-# Flask App with MySQL Docker Setup
+# Two-Tier Flask App — DevOps CI/CD Project
 
-This is a simple Flask app that interacts with a MySQL database. The app allows users to submit messages, which are then stored in the database and displayed on the frontend.
+This project demonstrates the **containerization, security scanning, CI/CD automation, and Kubernetes deployment** of an existing two-tier Flask/MySQL application.
 
-## Prerequisites
+> The application code was pre-existing. This project focuses on the **DevOps implementation and cloud deployment workflow**.
 
-Before you begin, make sure you have the following installed:
+## Architecture
 
-- Docker
-- Git (optional, for cloning the repository)
+```text
+Developer
+   |
+   v
+GitHub Repository
+   |
+   v
+GitHub Actions
+   |
+   +--> SonarQube
+   |      Code Analysis
+   |
+   +--> Docker Build
+   |
+   +--> Trivy
+   |      Container Vulnerability Scan
+   |
+   v
+Google Artifact Registry
+   |
+   v
+GKE
+   |
+   v
+Kubernetes Deployment
+   |
+   +--> Flask Application
+   |
+   +--> MySQL
+```
 
-## Setup
+## Tech Stack
 
-1. Clone this repository (if you haven't already):
+* Flask / Python
+* MySQL
+* Docker
+* Docker Compose
+* Kubernetes
+* Google Kubernetes Engine (GKE)
+* Google Artifact Registry
+* GitHub Actions
+* Workload Identity Federation (WIF)
+* SonarQube
+* Trivy
+* Google Cloud IAM
 
-   ```bash
-   git clone https://github.com/your-username/your-repo-name.git
-   ```
+## My DevOps Contribution
 
-2. Navigate to the project directory:
+* Created Docker configuration and containerized the application.
+* Configured Docker Compose for the Flask and MySQL services.
+* Created Kubernetes deployment configuration.
+* Configured Google Artifact Registry for container images.
+* Built the GitHub Actions CI/CD pipeline.
+* Implemented keyless GitHub-to-GCP authentication using Workload Identity Federation.
+* Added SonarQube for source-code quality analysis.
+* Added Trivy for Docker image vulnerability scanning.
+* Used Git commit SHA as the container image tag.
+* Automated image push to Artifact Registry.
+* Automated deployment to GKE using `kubectl set image`.
+* Added Kubernetes rollout verification using `kubectl rollout status`.
+* Configured required GCP IAM permissions and service accounts.
 
-   ```bash
-   cd your-repo-name
-   ```
+## CI/CD Pipeline
 
-3. Create a `.env` file in the project directory to store your MySQL environment variables:
+```text
+Git Push to main
+       |
+       v
+Checkout
+       |
+       v
+SonarQube Scan
+       |
+       v
+Docker Build
+       |
+       v
+Trivy Image Scan
+       |
+       v
+Push to Artifact Registry
+       |
+       v
+Authenticate to GCP using WIF
+       |
+       v
+Deploy to GKE
+       |
+       v
+Rollout Verification
+```
 
-   ```bash
-   touch .env
-   ```
+## Security
 
-4. Open the `.env` file and add your MySQL configuration:
+### Workload Identity Federation
 
-   ```
-   MYSQL_HOST=mysql
-   MYSQL_USER=your_username
-   MYSQL_PASSWORD=your_password
-   MYSQL_DB=your_database
-   ```
+GitHub Actions authenticates to Google Cloud using **Workload Identity Federation** instead of storing long-lived service-account JSON keys in GitHub.
 
-## Usage
+### SonarQube
 
-1. Start the containers using Docker Compose:
+SonarQube is used for static code analysis and Quality Gate enforcement.
 
-   ```bash
-   docker-compose up --build
-   ```
+The pipeline proceeds to the Docker build only when the configured Quality Gate passes.
 
-2. Access the Flask app in your web browser:
+### Trivy
 
-   - Frontend: http://localhost
-   - Backend: http://localhost:5000
+Trivy scans the built Docker image before it is pushed to Artifact Registry.
 
-3. Create the `messages` table in your MySQL database:
+The pipeline is configured to fail on **HIGH and CRITICAL** vulnerabilities.
 
-   - Use a MySQL client or tool (e.g., phpMyAdmin) to execute the following SQL commands:
-   
-     ```sql
-     CREATE TABLE messages (
-         id INT AUTO_INCREMENT PRIMARY KEY,
-         message TEXT
-     );
-     ```
+## Container Image
 
-4. Interact with the app:
+```text
+REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE:GIT_SHA
+```
 
-   - Visit http://localhost to see the frontend. You can submit new messages using the form.
-   - Visit http://localhost:5000/insert_sql to insert a message directly into the `messages` table via an SQL query.
+Using the Git commit SHA gives each build a unique and traceable image version.
 
-## Cleaning Up
+## Kubernetes Deployment
 
-To stop and remove the Docker containers, press `Ctrl+C` in the terminal where the containers are running, or use the following command:
+Initial deployment:
 
 ```bash
-docker-compose down
+kubectl apply -f k8s/
 ```
 
-## To run this two-tier application using  without docker-compose
+Subsequent image update:
 
-- First create a docker image from Dockerfile
 ```bash
-docker build -t flaskapp .
+kubectl set image deployment/app-deploy \
+  app-deploy=REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE:GIT_SHA \
+  -n NAMESPACE
 ```
 
-- Now, make sure that you have created a network using following command
+Rollout verification:
+
 ```bash
-docker network create twotier
+kubectl rollout status deployment/app-deploy \
+  -n NAMESPACE \
+  --timeout=5m
 ```
 
-- Attach both the containers in the same network, so that they can communicate with each other
+## Local Setup
 
-i) MySQL container 
 ```bash
-docker run -d \
-    --name mysql \
-    -v mysql-data:/var/lib/mysql \
-    --network=twotier \
-    -e MYSQL_DATABASE=mydb \
-    -e MYSQL_ROOT_PASSWORD=admin \
-    -p 3306:3306 \
-    mysql:5.7
-
-```
-ii) Backend container
-```bash
-docker run -d \
-    --name flaskapp \
-    --network=twotier \
-    -e MYSQL_HOST=mysql \
-    -e MYSQL_USER=root \
-    -e MYSQL_PASSWORD=admin \
-    -e MYSQL_DB=mydb \
-    -p 5000:5000 \
-    flaskapp:latest
-
+git clone https://github.com/sandesh-kumar00/two-tier-flask-app.git
+cd two-tier-flask-app
+docker compose up -d
 ```
 
-## Notes
+Application:
 
-- Make sure to replace placeholders (e.g., `your_username`, `your_password`, `your_database`) with your actual MySQL configuration.
-
-- This is a basic setup for demonstration purposes. In a production environment, you should follow best practices for security and performance.
-
-- Be cautious when executing SQL queries directly. Validate and sanitize user inputs to prevent vulnerabilities like SQL injection.
-
-- If you encounter issues, check Docker logs and error messages for troubleshooting.
-
+```text
+http://localhost:5000
 ```
 
-# two-tier-flask-app
+## CI/CD Requirements
+
+* GCP Workload Identity Federation provider
+* Dedicated GCP deployment service account
+* Artifact Registry repository
+* GKE cluster
+* `SONAR_TOKEN` GitHub secret
+* `SONAR_HOST_URL` GitHub repository variable
+
+No long-lived GCP service-account JSON key is required.
+
+
+## Project Goal
+
+The goal of this project is to demonstrate an end-to-end **DevOps CI/CD workflow on GCP**:
+
+**Code → Security Scan → Containerization → Artifact Registry → Kubernetes → GKE**
