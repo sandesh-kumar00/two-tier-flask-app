@@ -1,76 +1,72 @@
-name: Push and Deploy to GKE
+name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ "main" ]
+   branches:
+     - main
+
+permissions:
+  id-token: write
+  contents: read
 
 env:
-  IMAGE_NAME: 'vivo-app'
-  PROJECT_ID: 'project-3d4fd68e-9492-4690-aa8'
-  AR_REPO_LOCATION: 'asia-south1'
-  AR_URL: asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/my-registry
-  SERVICE_ACCOUNT: cluster-gke@project-3d4fd68e-9492-4690-aa8.iam.gserviceaccount.com
-  WORKLOAD_IDENTITY_PROVIDER: projects/511846968460/locations/global/workloadIdentityPools/github-pool-gke/providers/github
-  
-  # GKE specific variables
-  GKE_CLUSTER: 'cluster-1'      
-  GKE_ZONE: 'asia-south1-a'           
-  DEPLOYMENT_NAME: 'app-deploy' 
-  CONTAINER_NAME: 'app-cont'           
+  PROJECT_ID: project-3d4fd68e-9492-4690-aa8
+  REGION: asia-south1
+  REPOSITORY: image-collector
+  IMAGE_NAME: app
+  CLUSTER_NAME: cluster-1
+  NAMESPAE: app
 
 jobs:
   build-and-deploy:
-    permissions:
-      contents: 'read'
-      id-token: 'write'
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: checkout code
+        uses: actions/checkout@v4
 
-    # 1. Google Authentication
-    - name: Google Auth
-      id: auth
-      uses: 'google-github-actions/auth@v2'
-      with:
-        token_format: 'access_token'
-        project_id: ${{ env.PROJECT_ID }}
-        service_account: ${{ env.SERVICE_ACCOUNT }}
-        workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+      - name: Authentication to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload-identity-provider: projects/511846968460/locations/global/workloadIdentityPools/identity-pool/providers/github
+          service-account: image-pusher@project-3d4fd68e-9492-4690-aa8.iam.gserviceaccount.com
 
-    # 2. Docker Registry Login
-    - name: Docker Auth
-      id: docker-auth
-      uses: 'docker/login-action@v3'
-      with:
-        username: 'oauth2accesstoken'
-        password: '${{ steps.auth.outputs.access_token }}'
-        registry: '${{ env.AR_REPO_LOCATION }}-docker.pkg.dev'
+      - name: gcloud SDK setup
+        uses: google-github-ations/setup-gcloud@v2
 
-    # 3. Build & Push Image to Artifact Registry
-    - name: Build and Push Container
-      run: |-
-        docker build \
-          -t "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:latest" \
-          -t "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" ./ 
-        docker push "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" 
-        docker push "${{ env.AR_URL }}/${{ env.IMAGE_NAME }}:latest"
+      - name: configure docker to Artifact
+        run: |
+          gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
 
-    # 4. Get GKE Credentials (kubectl setup)
-    - name: Set up GKE credentials
-      uses: 'google-github-actions/get-gke-credentials@v2'
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_ZONE }}
+      - name: Building image
+        run: |
+          docker build \
+            -t asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/image-collector/app:${{ github.sha }} ./
 
-    # 5. Deploy / Update Image on GKE Cluster
-    - name: Deploy to GKE
-      run: |-
-       
-       sed -i "s/IMAGE_TAG/${{ github.sha }}/g" ./k8s/deployment.yml
-     
-        kubectl apply -f ./k8s
-        
-        # Rollout status verify 
-        kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }}
+      - name: pushing image to Artifact
+        run: |
+          docke push \
+            asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/image-collector/app:${{ github.sha }}
+
+      - name: get GKE credentials
+        run: |
+           gcloud container clusters get-credentials ${CLUSTER_NAME} \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }}
+
+      - name: Deploy to GKE cluster
+        run: |
+          kubectl set image deployment/app-deploy \
+            app-deploy=europe-north2-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${GITHUB_SHA} \
+            -n ${NAMESPACE}
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/app-deploy \
+            -n ${NAMESPACE} \
+            --timeout=5m
+          
+            
+    
+  
+
