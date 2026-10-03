@@ -65,8 +65,8 @@ jobs:
 
       - name: pushing image to Artifact
         run: |
-          docke push \
-            asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/image-collector/app:${{ github.sha }}
+          docker push \
+            asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: get GKE credentials
         run: |
