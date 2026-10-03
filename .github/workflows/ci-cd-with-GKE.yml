@@ -13,7 +13,7 @@ env:
   PROJECT_ID: project-3d4fd68e-9492-4690-aa8
   REGION: asia-south1
   REPOSITORY: image-collector
-  IMAGE_NAME: app
+  IMAGE_NAME: my-app
   CLUSTER_NAME: cluster-1
   NAMESPAE: app
 
@@ -51,17 +51,17 @@ jobs:
       - name: Building image
         run: |
           docker build \
-            -t asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/image-collector/app:${{ github.sha }} ./
+            -t asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ./
 
       - name: Trivy Image Scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: asia-south1-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${GITHUB_SHA}
-          format: table
-          exit-code: 0
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
+          image-ref: "asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          format: "table"
+          exit-code: "0"
+          ignore-unfixed: "true"
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
 
       - name: pushing image to Artifact
         run: |
