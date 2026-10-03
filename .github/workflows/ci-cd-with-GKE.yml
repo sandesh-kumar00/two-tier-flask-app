@@ -16,7 +16,7 @@ env:
   IMAGE_NAME: my-app
   CLUSTER_NAME: cluster-1
   CLUSTER_LOCATION: us-central1-a
-  NAMESPACE: app
+  NAMESPACE: prod
 
 jobs:
   build-and-deploy:
@@ -81,7 +81,7 @@ jobs:
 
       - name: Deploy to GKE cluster
         run: |
-          kubectl set image deployment/app-deploy \
+          kubectl set image deployment/app \
             app-cont=asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME}}:${{ github.sha }} \
             -n ${{ env.NAMESPACE }}
 
