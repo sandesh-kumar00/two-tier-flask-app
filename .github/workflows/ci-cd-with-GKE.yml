@@ -80,7 +80,7 @@ jobs:
       - name: Deploy to GKE cluster
         run: |
           kubectl set image deployment/app-deploy \
-            app-cont=europe-north2-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME}}:${{ github.sha }} \
+            app-cont=asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME}}:${{ github.sha }} \
             -n ${{ env.NAMESPACE }}
 
       - name: Verify rollout
