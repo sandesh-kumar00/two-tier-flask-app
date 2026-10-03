@@ -38,7 +38,7 @@ jobs:
           service-account: image-pusher@project-3d4fd68e-9492-4690-aa8.iam.gserviceaccount.com
 
       - name: gcloud SDK setup
-        uses: google-github-ations/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: configure docker to Artifact
         run: |
