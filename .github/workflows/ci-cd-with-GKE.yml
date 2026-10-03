@@ -15,6 +15,7 @@ env:
   REPOSITORY: image-collector
   IMAGE_NAME: my-app
   CLUSTER_NAME: cluster-1
+  CLUSTER_LOCATION: us-central-a
   NAMESPAE: app
 
 jobs:
@@ -68,11 +69,13 @@ jobs:
           docker push \
             asia-south1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: get GKE credentials
-        run: |
-           gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
-            --region ${{ env.REGION }} \
-            --project ${{ env.PROJECT_ID }}
+      - name: Set up GKE credentials
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: "${{ env.CLUSTER_NAME }}"
+          location: "${{ env.CLUSTER_LOCATION }}"
+          project_id: "${{ env.PROJECT_ID }}"
+
 
       - name: Deploy to GKE cluster
         run: |
