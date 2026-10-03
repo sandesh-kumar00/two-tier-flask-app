@@ -16,7 +16,7 @@ env:
   IMAGE_NAME: my-app
   CLUSTER_NAME: cluster-1
   CLUSTER_LOCATION: us-central1-a
-  NAMESPAE: app
+  NAMESPACE: app
 
 jobs:
   build-and-deploy:
@@ -80,13 +80,13 @@ jobs:
       - name: Deploy to GKE cluster
         run: |
           kubectl set image deployment/app-deploy \
-            app-cont=europe-north2-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${GITHUB_SHA} \
-            -n ${NAMESPACE}
+            app-cont=europe-north2-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME}}:${{GITHUB_SHA}} \
+            -n ${{ env.NAMESPACE }}
 
       - name: Verify rollout
         run: |
           kubectl rollout status deployment/app-deploy \
-            -n ${NAMESPACE} \
+            -n ${{ env.NAMESPACE }} \
             --timeout=5m
           
             
