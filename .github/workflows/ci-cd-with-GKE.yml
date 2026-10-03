@@ -15,7 +15,7 @@ env:
   REPOSITORY: image-collector
   IMAGE_NAME: my-app
   CLUSTER_NAME: cluster-1
-  CLUSTER_LOCATION: us-central-a
+  CLUSTER_LOCATION: us-central1-a
   NAMESPAE: app
 
 jobs:
