@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: app-cont
-          image: IMAGE_TAG
+          image: asia-south1-docker.pkg.dev/project-3d4fd68e-9492-4690-aa8/image-collector/my-app:${{ github.sha }}
           ports:
             - containerPort: 5000
           envFrom:
